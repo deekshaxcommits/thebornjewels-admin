@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "The Born Jewels",
-  description: "Luxury jewellery brand website",
+  title: "The Born Admin",
+  description: "Admin Panel For The Born Jewels.",
 };
 
 export default function RootLayout({

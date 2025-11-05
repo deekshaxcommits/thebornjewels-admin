@@ -8,11 +8,14 @@ import {
     IconUsers,
     IconSettings,
     IconLogout,
+    IconDiscountOff,
+    IconDiscountCheck,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sidebar, SidebarBody, SidebarLink } from "../ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
+import { DockIcon, Package } from "lucide-react";
 
 type LayoutProps = {
     children: ReactNode;
@@ -34,9 +37,9 @@ export default function Layout({ children }: LayoutProps) {
             icon: <IconPackage className="h-5 w-5" />,
         },
         {
-            label: "Add Product",
-            href: "/upload",
-            icon: <IconPlus className="h-5 w-5" />,
+            label: "Orders",
+            href: "/orders",
+            icon: <IconDiscountCheck className="h-5 w-5" />,
         },
         {
             label: "Users",
