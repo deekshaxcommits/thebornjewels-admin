@@ -60,7 +60,7 @@ export default function ProductPage() {
                     <div className="space-y-4">
                         <div className="aspect-square relative rounded-lg overflow-hidden bg-zinc-50">
                             <Image
-                                src={product.images?.[0] || "/placeholder.jpg"}
+                                src={product.images?.[0].url || "/placeholder.jpg"}
                                 alt={product.title}
                                 fill
                                 className="object-cover object-center"
@@ -74,7 +74,7 @@ export default function ProductPage() {
                                         className="aspect-square relative rounded-md overflow-hidden bg-zinc-50"
                                     >
                                         <Image
-                                            src={image}
+                                            src={image.url}
                                             alt={`${product.title} view ${index + 1}`}
                                             fill
                                             className="object-cover object-center"
