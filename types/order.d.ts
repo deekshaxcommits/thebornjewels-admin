@@ -7,7 +7,7 @@ export interface IOrderItem {
     name: string;
     image: string;
     originalPrice: number;
-    discountedPrice: number;
+    price: number;
     quantity: number;
     finalPrice: number;
     createdAt: string;

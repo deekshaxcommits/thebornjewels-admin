@@ -28,6 +28,15 @@ export interface Product {
     isBestSeller?: boolean;
     inStock?: boolean;
     isActive?: boolean;
+
+    // 🧮 Admin Pricing Fields
+    buyPrice?: number;                    // Base cost from supplier
+    gstPercent?: number;                  // GST percentage (default 3%)
+    razorpayCutPercent?: number;          // Razorpay fee %
+    deliveryFee?: number;                 // Delivery cost
+    totalCostBeforeMarkup?: number;       // (buy + gst + razorpay + delivery)
+    calculatedSellingPrice?: number;      // final SP = totalCostBeforeMarkup * 2
+
     createdAt?: string;
     updatedAt?: string;
 }

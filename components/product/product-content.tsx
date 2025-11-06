@@ -1,19 +1,16 @@
-// components/product-content.tsx
 'use client'
 
 import { Switch } from '@headlessui/react'
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, Plus, Edit2, Trash2, Eye, Filter, X } from 'lucide-react'
+import { Search, Plus, Edit2, Trash2, Eye, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { DM_Serif_Display } from "next/font/google"
 import { useProducts } from '@/hooks/useProducts'
-import { deactivateProduct, deleteProduct, getProducts, reactivateProduct } from '@/lib/api/products'
+import { deactivateProduct, deleteProduct, reactivateProduct } from '@/lib/api/products'
 import { ProductModal } from './product-modal'
 import { ProductDetailsModal } from './product-detail-model'
-import { Product } from "@/types/product";
-
 
 const dmFont = DM_Serif_Display({
     subsets: ["latin"],
@@ -46,6 +43,7 @@ export function ProductContent() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState()
     const [editingProduct, setEditingProduct] = useState<string | null>(null)
+    const [zoomImage, setZoomImage] = useState<string | null>(null)
 
     const { data: products = [], isLoading, isError, refetch } = useProducts()
 
@@ -56,7 +54,6 @@ export function ProductContent() {
 
     const allProducts = products || []
 
-    // Compute categories dynamically
     const categories = useMemo(() => {
         const categoryMap = allProducts.reduce((acc: any, product: any) => {
             acc[product.category] = (acc[product.category] || 0) + 1
@@ -73,21 +70,13 @@ export function ProductContent() {
         ]
     }, [allProducts])
 
-    // Filter & sort products
     const filteredProducts = useMemo(() => {
         let filtered = allProducts
 
-        if (selectedCategory !== 'all') {
-            filtered = filtered.filter((p: any) => p.category === selectedCategory)
-        }
+        if (selectedCategory !== 'all') filtered = filtered.filter((p: any) => p.category === selectedCategory)
+        if (selectedMaterial !== 'all') filtered = filtered.filter((p: any) => p.material === selectedMaterial)
 
-        if (selectedMaterial !== 'all') {
-            filtered = filtered.filter((p: any) => p.material === selectedMaterial)
-        }
-
-        filtered = filtered.filter(
-            (p: any) => p.price >= priceRange[0] && p.price <= priceRange[1]
-        )
+        filtered = filtered.filter((p: any) => p.price >= priceRange[0] && p.price <= priceRange[1])
 
         if (searchQuery) {
             const q = searchQuery.toLowerCase()
@@ -100,21 +89,11 @@ export function ProductContent() {
         }
 
         switch (sortBy) {
-            case 'price-low':
-                filtered.sort((a: any, b: any) => a.price - b.price)
-                break
-            case 'price-high':
-                filtered.sort((a: any, b: any) => b.price - a.price)
-                break
-            case 'name':
-                filtered.sort((a: any, b: any) => a.title.localeCompare(b.title))
-                break
+            case 'price-low': filtered.sort((a: any, b: any) => a.price - b.price); break
+            case 'price-high': filtered.sort((a: any, b: any) => b.price - a.price); break
+            case 'name': filtered.sort((a: any, b: any) => a.title.localeCompare(b.title)); break
             case 'newest':
-            default:
-                filtered.sort((a: any, b: any) =>
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                )
-                break
+            default: filtered.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); break
         }
 
         return filtered
@@ -138,14 +117,17 @@ export function ProductContent() {
         setIsModalOpen(true)
     }
 
-    const handleModalSuccess = () => {
-        refetch()
-    }
-
+    const handleModalSuccess = () => refetch()
     const handleModalClose = () => {
         setIsModalOpen(false)
         setEditingProduct(null)
     }
+    const activeFiltersCount = [
+        selectedCategory !== 'all',
+        selectedMaterial !== 'all',
+        priceRange[1] !== 5000,
+        searchQuery !== ''
+    ].filter(Boolean).length
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this product?')) {
@@ -160,55 +142,36 @@ export function ProductContent() {
         }
     }
 
-    // Add these functions inside ProductContent
     const handleToggleActive = async (product: any) => {
         try {
             if (product.isActive) {
-                // Deactivate
-                if (!confirm('Are you sure you want to deactivate this product?')) return;
-                await deactivateProduct(product._id); // soft delete
-                alert('Product deactivated!');
+                if (!confirm('Are you sure you want to deactivate this product?')) return
+                await deactivateProduct(product._id)
+                alert('Product deactivated!')
             } else {
-                // Reactivate
-                await reactivateProduct(product._id);
-                alert('Product reactivated!');
+                await reactivateProduct(product._id)
+                alert('Product reactivated!')
             }
-            refetch();
+            refetch()
         } catch (err) {
-            alert('Error updating product status');
-            console.error(err);
+            alert('Error updating product status')
+            console.error(err)
         }
-    };
-
-    if (isLoading) {
-        return <div className="text-center py-16 text-zinc-500">Loading products...</div>
     }
 
-    if (isError) {
-        return <div className="text-center py-16 text-red-500">Error loading products.</div>
-    }
-
-    const activeFiltersCount = [
-        selectedCategory !== 'all',
-        selectedMaterial !== 'all',
-        priceRange[1] !== 5000,
-        searchQuery !== ''
-    ].filter(Boolean).length
+    if (isLoading) return <div className="text-center py-16 text-zinc-500">Loading products...</div>
+    if (isError) return <div className="text-center py-16 text-red-500">Error loading products.</div>
 
     return (
         <>
             <div className="min-h-screen bg-gray-50">
                 <div className="container mx-auto px-4 py-8">
-                    {/* Header */}
                     <div className="mb-6">
                         <h1 className={`text-3xl font-bold text-gray-900 mb-2 ${dmFont.className}`}>
                             Product Management
                         </h1>
-                        <p className="text-gray-600">
-                            Manage your product inventory and listings
-                        </p>
+                        <p className="text-gray-600">Manage your product inventory and listings</p>
                     </div>
-
                     {/* Actions Bar */}
                     <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -320,98 +283,52 @@ export function ProductContent() {
                             <table className="w-full">
                                 <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Product
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                            Category
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                                            Material
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Price
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                            Stock
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                            Status
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Website Price</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Buy Price</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Cost</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Calc SP</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
+
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {filteredProducts.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="px-6 py-12 text-center">
-                                                <div className="flex flex-col items-center justify-center">
-                                                    <svg
-                                                        className="w-12 h-12 text-gray-300 mb-4"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={1.5}
-                                                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                                                        />
-                                                    </svg>
-                                                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                                        No products found
-                                                    </h3>
-                                                    <p className="text-gray-500 mb-4">
-                                                        Try adjusting your filters or search terms
-                                                    </p>
-                                                    <Button onClick={clearFilters} size="sm">
-                                                        Clear All Filters
-                                                    </Button>
-                                                </div>
+                                            <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
+                                                No products found
                                             </td>
                                         </tr>
                                     ) : (
                                         filteredProducts.map((product: any) => (
                                             <tr key={product._id} className="hover:bg-gray-50 transition">
-                                                <td className="px-4 py-4">
+                                                <td className="px-4 py-4 max-w-[300px]">
                                                     <div className="flex items-center gap-3">
                                                         <img
-                                                            src={product.image || product.images?.[0]?.url || 'https://via.placeholder.com/50'}
+                                                            onClick={() => setZoomImage(product.images?.[0]?.url)}
+                                                            src={product.image || product.images?.[0]?.url || "https://via.placeholder.com/50"}
                                                             alt={product.title}
-                                                            className="w-12 h-12 object-cover rounded-lg"
+                                                            className="w-12 h-12 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform"
                                                         />
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="text-sm font-medium text-gray-900 truncate">
-                                                                {product.title}
-                                                            </div>
+                                                        <div className="min-w-0 flex-1 max-w-[200px]">
+                                                            <div className="text-sm font-medium text-gray-900 truncate">{product.title}</div>
                                                             {product.description && (
-                                                                <div className="text-xs text-gray-500 mt-1 truncate hidden sm:block">
-                                                                    {product.description}
-                                                                </div>
+                                                                <div className="text-xs text-gray-500 mt-1 truncate">{product.description}</div>
                                                             )}
-                                                            <div className="sm:hidden text-xs text-gray-500 mt-1">
-                                                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
-                                                                    {product.category}
-                                                                </span>
-                                                                <span>₹{product.price?.toFixed(2)}</span>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-                                                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                                                        {product.category}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
-                                                    <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded">
-                                                        {product.material || 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+
+                                                <td className="px-4 py-4"> <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                                                    {product.category}
+                                                </span></td>
+                                                <td className="px-4 py-4">{product.material || "N/A"}</td>
+
+                                                <td className="px-4 py-4">
                                                     <div className="flex flex-col">
                                                         <span>₹{product.price?.toFixed(2)}</span>
                                                         {product.originalPrice && product.originalPrice > product.price && (
@@ -421,23 +338,28 @@ export function ProductContent() {
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden sm:table-cell">
-                                                    {product.stock || product.quantity || 'N/A'}
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
+
+                                                <td className="px-4 py-4">₹{product.buyPrice?.toFixed(2) || 0}</td>
+                                                <td className="px-4 py-4">₹{product.totalCostBeforeMarkup?.toFixed(2) || 0}</td>
+                                                <td className="px-4 py-4">₹{product.calculatedSellingPrice?.toFixed(2) || 0}</td>
+                                                <td className="px-4 py-4">{product.stock || "N/A"}</td>
+
+                                                <td className="px-4 py-4 min-w-[120px]">
                                                     <span className={`px-2 py-1 text-xs font-medium rounded ${product.isActive === false
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : (product.stock > 0
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-yellow-100 text-yellow-800')
+                                                        ? "bg-red-100 text-red-800"
+                                                        : product.stock > 0
+                                                            ? "bg-green-100 text-green-800"
+                                                            : "bg-yellow-100 text-yellow-800"
                                                         }`}>
                                                         {product.isActive === false
-                                                            ? 'Inactive'
-                                                            : (product.stock > 0 ? 'In Stock' : 'Out of Stock')
-                                                        }
+                                                            ? "Inactive"
+                                                            : product.stock > 0
+                                                                ? "In Stock"
+                                                                : "Out of Stock"}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+
+                                                <td className="px-4 py-4 text-sm font-medium">
                                                     <div className="flex gap-1">
                                                         <button
                                                             onClick={() => {
@@ -456,8 +378,6 @@ export function ProductContent() {
                                                         >
                                                             <Edit2 className="w-4 h-4" />
                                                         </button>
-
-                                                        {/* Toggle Active / Inactive */}
                                                         <Switch
                                                             checked={product.isActive}
                                                             onChange={() => handleToggleActive(product)}
@@ -469,8 +389,6 @@ export function ProductContent() {
                                                                     } inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300`}
                                                             />
                                                         </Switch>
-
-                                                        {/* Permanent Delete */}
                                                         <button
                                                             onClick={() => handleDelete(product._id)}
                                                             className="p-2 text-gray-600 hover:bg-gray-50 rounded transition"
@@ -480,7 +398,6 @@ export function ProductContent() {
                                                         </button>
                                                     </div>
                                                 </td>
-
                                             </tr>
                                         ))
                                     )}
@@ -491,14 +408,33 @@ export function ProductContent() {
                 </div>
             </div>
 
-            {/* Product Modal */}
+            {/* Full Image Popup */}
+            {zoomImage && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center"
+                    onClick={() => setZoomImage(null)}
+                >
+                    <button
+                        className="absolute top-6 right-6 bg-white/20 hover:bg-white/40 rounded-full p-2 transition"
+                        onClick={() => setZoomImage(null)}
+                    >
+                        <X className="w-6 h-6 text-white" />
+                    </button>
+                    <img
+                        src={zoomImage}
+                        alt="Zoomed product"
+                        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-xl"
+                    />
+                </div>
+            )}
+
             <ProductModal
                 onClose={handleModalClose}
                 onSuccess={handleModalSuccess}
                 productId={editingProduct || undefined}
                 isOpen={isModalOpen}
             />
-            {/* Product Modal */}
+
             <ProductDetailsModal
                 onClose={() => setIsDetailModalOpen(false)}
                 product={selectedProduct}

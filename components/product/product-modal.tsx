@@ -41,6 +41,22 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
     const [files, setFiles] = useState<ProductFile[]>([])
     const [newOccasion, setNewOccasion] = useState("")
     const [newStyle, setNewStyle] = useState("")
+    const [buyPrice, setBuyPrice] = useState(0)
+    const [razorpayCutPercent, setRazorpayCutPercent] = useState(0)
+    const [gstPercent, setGstPercent] = useState(3)
+    const [deliveryFee, setDeliveryFee] = useState(0)
+    const [totalCostBeforeMarkup, setTotalCostBeforeMarkup] = useState(0)
+    const [calculatedSellingPrice, setCalculatedSellingPrice] = useState(0)
+
+    // live calculations
+    useEffect(() => {
+        const razorpayCut = (razorpayCutPercent / 100) * buyPrice
+        const gstCut = (gstPercent / 100) * buyPrice
+        const total = buyPrice + razorpayCut + gstCut + deliveryFee
+        setTotalCostBeforeMarkup(total)
+        setCalculatedSellingPrice(Math.round(total * 2))
+    }, [buyPrice, razorpayCutPercent, gstPercent, deliveryFee])
+
 
     useEffect(() => {
         if (productId && isOpen) {
@@ -57,6 +73,13 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                     setIsBestSeller(data.isBestSeller)
                     setIsNewArrival(data.isNewArrival)
                     setMeta(data.meta || { occasion: [], style: [] })
+                    setBuyPrice(data.buyPrice || 0)
+                    setRazorpayCutPercent(data.razorpayCutPercent || 0)
+                    setGstPercent(data.gstPercent || 3)
+                    setDeliveryFee(data.deliveryFee || 0)
+                    setTotalCostBeforeMarkup(data.totalCostBeforeMarkup || 0)
+                    setCalculatedSellingPrice(data.calculatedSellingPrice || 0)
+
                     setFiles(
                         data.images?.map((img: any) => ({
                             url: img.url,
@@ -174,8 +197,9 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
     }
 
     const handleSubmit = async () => {
-        if (!title || !price || !category || !material) {
+        if (!title || !price || !category) {
             alert("Please fill all required fields")
+            console.log("Validation failed", title, price, category)
             return
         }
 
@@ -191,7 +215,11 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
             isBestSeller,
             isNewArrival,
             meta,
-            tempKeys: files.map(f => f.key)
+            tempKeys: files.map(f => f.key),
+            buyPrice,
+            razorpayCutPercent,
+            gstPercent,
+            deliveryFee,
         }
 
         try {
@@ -255,28 +283,113 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                                         />
                                     </div>
 
+
+                                    {/* --- ADMIN PRICING SECTION --- */}
+                                    <div className="mt-6 border-t pt-4">
+                                        <h3 className="text-sm font-semibold text-zinc-800 mb-3">Pricing (Admin Only)</h3>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label htmlFor="buyPrice">Buy Price (₹)</Label>
+                                                <Input
+                                                    id="buyPrice"
+                                                    type="text"
+                                                    value={buyPrice}
+                                                    onChange={(e) => setBuyPrice(Number(e.target.value))}
+                                                    placeholder="0"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="deliveryFee">Delivery Fee (₹)</Label>
+                                                <Input
+                                                    id="deliveryFee"
+                                                    type="text"
+                                                    value={deliveryFee}
+                                                    onChange={(e) => setDeliveryFee(Number(e.target.value))}
+                                                    placeholder="0"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="gstPercent">GST (%)</Label>
+                                                <Input
+                                                    id="gstPercent"
+                                                    type="text"
+                                                    value={gstPercent}
+                                                    onChange={(e) => setGstPercent(Number(e.target.value))}
+                                                    placeholder="3"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="razorpayCutPercent">Razorpay Cut (%)</Label>
+                                                <Input
+                                                    id="razorpayCutPercent"
+                                                    type="text"
+                                                    value={razorpayCutPercent}
+                                                    onChange={(e) => setRazorpayCutPercent(Number(e.target.value))}
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </div>
+                                        {/* Auto Calculated Fields */}
+                                        <div className="mt-6 border-t border-zinc-200 pt-4">
+                                            <h4 className="text-sm font-semibold text-zinc-800 mb-3">Auto Calculated Summary</h4>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gradient-to-br from-zinc-50 to-zinc-100 p-4 rounded-xl shadow-inner">
+                                                {/* Total Cost */}
+                                                <div className="p-3 bg-white rounded-lg border border-zinc-200 shadow-sm">
+                                                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide mb-1">
+                                                        Total Cost Before Markup
+                                                    </p>
+                                                    <p className="text-lg font-semibold text-zinc-800">
+                                                        ₹{totalCostBeforeMarkup.toLocaleString("en-IN")}
+                                                    </p>
+                                                </div>
+
+                                                {/* Calculated Selling Price */}
+                                                <div className="p-3 bg-white rounded-lg border border-zinc-200 shadow-sm">
+                                                    <p className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">
+                                                        Suggested Selling Price
+                                                    </p>
+                                                    <p className="text-lg font-bold text-blue-700">
+                                                        ₹{calculatedSellingPrice.toLocaleString("en-IN")}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <p className="mt-2 text-xs text-zinc-500">
+                                                💡 These values are auto-calculated based on Buy Price, GST, Razorpay Cut, and Delivery Fee.
+                                            </p>
+                                        </div>
+
+                                    </div>
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <Label htmlFor="price">Price *</Label>
+                                            <Label htmlFor="price">Price On Website *</Label>
                                             <Input
                                                 id="price"
-                                                type="number"
+                                                type="text"
                                                 value={price}
                                                 onChange={e => setPrice(Number(e.target.value))}
                                                 placeholder="0.00"
                                             />
                                         </div>
                                         <div>
-                                            <Label htmlFor="originalPrice">Original Price</Label>
+                                            <Label htmlFor="originalPrice">MRP *</Label>
                                             <Input
                                                 id="originalPrice"
-                                                type="number"
+                                                type="text"
                                                 value={originalPrice}
                                                 onChange={e => setOriginalPrice(Number(e.target.value))}
                                                 placeholder="0.00"
                                             />
                                         </div>
                                     </div>
+
+
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
