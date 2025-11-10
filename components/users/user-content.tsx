@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { DM_Serif_Display } from "next/font/google"
 import { useUsers } from '@/hooks/useUsers'
-import { getAllUsers } from '@/lib/api/users'
+import { deleteUser, getAllUsers } from '@/lib/api/users'
+import { AddUserModal } from './AddUserModal'
 
 const dmFont = DM_Serif_Display({
     subsets: ["latin"],
@@ -91,11 +92,11 @@ export function UserContent() {
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this user?')) {
             try {
-                // await deleteUser(id)
+                await deleteUser(id)
                 alert('User deleted successfully!')
                 refetch()
-            } catch (err) {
-                alert('Error deleting user.')
+            } catch (err: any) {
+                alert(err.message || 'Error deleting user.')
                 console.error(err)
             }
         }
@@ -289,18 +290,12 @@ export function UserContent() {
                 </div>
             </div>
 
-            {/* Modals
-            <UserModal
+            <AddUserModal
+                isOpen={isModalOpen}
                 onClose={handleModalClose}
                 onSuccess={handleModalSuccess}
-                userId={editingUser || undefined}
-                isOpen={isModalOpen}
             />
-            <UserDetailsModal
-                onClose={() => setIsDetailModalOpen(false)}
-                user={selectedUser}
-                isOpen={isDetailModalOpen}
-            /> */}
+
         </>
     )
 }

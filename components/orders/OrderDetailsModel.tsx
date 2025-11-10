@@ -1,4 +1,5 @@
 import { IOrder } from "@/types/order";
+import Link from "next/link";
 
 import React from 'react'
 
@@ -84,9 +85,9 @@ const OrderDetailsModel = ({ order, onClose }: { order: IOrder; onClose: () => v
                         {order.items.map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-medium text-gray-900">
-                                        {item.product?.title || "Product removed"}
-                                    </p>
+                                    <Link href={`https://thebornjewels.com/products/${item.product._id}`} className="font-medium text-gray-900 hover:underline">
+                                        {item.product.title}
+                                    </Link>
                                     <p className="text-sm text-gray-500">
                                         Qty: {item.quantity} × ₹{item.product.price.toLocaleString("en-IN")}
                                     </p>

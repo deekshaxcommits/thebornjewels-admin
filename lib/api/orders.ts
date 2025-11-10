@@ -38,7 +38,7 @@ export const addManualOrder = async (payload: {
 }
 
 // ✅ Update order status
-export const updateOrderStatus = async (orderId: string, status: string) => {
-    const res = await api.patch(`/orders/${orderId}/status`, { status })
+export const updateOrderStatus = async (orderId: string, status: string, tracking?: any) => {
+    const res = await api.patch(`/orders/${orderId}/status`, { status, tracking })
     return res.data.order
 }
