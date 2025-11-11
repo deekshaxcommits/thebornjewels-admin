@@ -33,6 +33,7 @@ export interface IPaymentInfo {
 
 export interface IOrder {
     _id: string;
+    orderCode: string;
     user: string;
     items: IOrderItem[];
     shippingAddress: IShippingAddress;

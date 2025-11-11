@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Eye, Loader2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { getAllOrders, updateOrderStatus } from "@/lib/api/orders"
+import { downloadInvoice, downloadShippingLabel, getAllOrders, updateOrderStatus } from "@/lib/api/orders"
 import { IOrder } from "@/types/order"
 import { cn } from "@/lib/utils"
 import OrderDetailsModal from "@/components/orders/OrderDetailsModel"
@@ -97,6 +97,56 @@ export default function OrdersPage() {
         }
     }
 
+    const downloadBill = async (orderId: string, orderCode: string) => {
+        try {
+            console.log("downloading....");
+
+            // this already gives you the blob
+            const blob = await downloadInvoice(orderId);
+
+            // create an object URL for the blob
+            const url = URL.createObjectURL(blob);
+
+            // make a hidden anchor tag to trigger download
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `I${orderCode}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+
+            // cleanup
+            link.remove();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error downloading bill:", error);
+        }
+    };
+
+    const downloadShippinglabel = async (orderId: string, orderCode: string) => {
+        try {
+            console.log("downloading....");
+
+            // this already gives you the blob
+            const blob = await downloadShippingLabel(orderId);
+
+            // create an object URL for the blob
+            const url = URL.createObjectURL(blob);
+
+            // make a hidden anchor tag to trigger download
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `S${orderCode}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+
+            // cleanup
+            link.remove();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error downloading bill:", error);
+        }
+    };
+
     return (
         <div className="p-6 space-y-6 relative">
             {/* 🔄 Global Overlay Loader for Fetch/Update */}
@@ -151,7 +201,7 @@ export default function OrdersPage() {
                         <tbody className="divide-y divide-gray-100">
                             {filteredOrders.map(order => (
                                 <tr key={order._id} className="hover:bg-gray-50 transition cursor-pointer">
-                                    <td className="p-3 text-xs text-gray-600 font-mono">{order._id.slice(-8)}</td>
+                                    <td className="p-3 text-xs text-gray-600 font-mono">{order.orderCode}</td>
                                     <td className="p-3 font-medium text-gray-800">
                                         {(order as any).user?.name || "Guest"}
                                         <div className="text-xs text-gray-500">{(order as any).user?.email}</div>
@@ -199,6 +249,13 @@ export default function OrdersPage() {
                                             <Eye className="w-4 h-4 inline mr-1" /> View
                                         </button>
                                     </td>
+                                    <Button variant="outline" size="sm" className="ml-2" onClick={() => downloadBill(order._id, order.orderCode)}>
+                                        Download Invoice
+                                    </Button>
+                                    <Button variant="outline" size="sm" className="ml-2" onClick={() => downloadShippinglabel(order._id, order.orderCode)}>
+                                        Shipping
+                                    </Button>
+
                                 </tr>
                             ))}
                         </tbody>

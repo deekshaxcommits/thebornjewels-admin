@@ -42,3 +42,17 @@ export const updateOrderStatus = async (orderId: string, status: string, trackin
     const res = await api.patch(`/orders/${orderId}/status`, { status, tracking })
     return res.data.order
 }
+// ✅ Download Invoice
+export const downloadInvoice = async (orderId: string) => {
+    const res = await api.get(`/orders/${orderId}/invoice`, {
+        responseType: 'blob',
+    });
+    return res.data;
+}
+
+export const downloadShippingLabel = async (orderId: string) => {
+    const res = await api.get(`/orders/${orderId}/shipping-label`, {
+        responseType: 'blob',
+    });
+    return res.data;
+}
