@@ -3,7 +3,7 @@
 import { Switch } from '@headlessui/react'
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, Plus, Edit2, Trash2, Eye, X } from 'lucide-react'
+import { Search, Plus, Edit2, Trash2, Eye, X, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { DM_Serif_Display } from "next/font/google"
@@ -11,6 +11,8 @@ import { useProducts } from '@/hooks/useProducts'
 import { deactivateProduct, deleteProduct, reactivateProduct } from '@/lib/api/products'
 import { ProductModal } from './product-modal'
 import { ProductDetailsModal } from './product-detail-model'
+import { ReviewModal } from './ReviewModal'
+import { Product } from '@/types/product'
 
 const dmFont = DM_Serif_Display({
     subsets: ["latin"],
@@ -41,9 +43,10 @@ export function ProductContent() {
     const [searchQuery, setSearchQuery] = useState('')
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-    const [selectedProduct, setSelectedProduct] = useState()
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [editingProduct, setEditingProduct] = useState<string | null>(null)
     const [zoomImage, setZoomImage] = useState<string | null>(null)
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
     const { data: products = [], isLoading, isError, refetch } = useProducts()
 
@@ -390,6 +393,15 @@ export function ProductContent() {
                                                             />
                                                         </Switch>
                                                         <button
+                                                            className="p-2 text-yellow-600 hover:bg-yellow-50 rounded transition"
+                                                            onClick={() => {
+                                                                setSelectedProduct(product)
+                                                                setReviewModalOpen(true)
+                                                            }}
+                                                        >
+                                                            <Star className="w-4 h-4" />
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleDelete(product._id)}
                                                             className="p-2 text-gray-600 hover:bg-gray-50 rounded transition"
                                                             title="Delete Permanently"
@@ -440,6 +452,14 @@ export function ProductContent() {
                 product={selectedProduct}
                 isOpen={isDetailModalOpen}
             />
+
+            {(reviewModalOpen && selectedProduct) && (
+                <ReviewModal
+                    productId={selectedProduct._id}
+                    onClose={() => setReviewModalOpen(false)}
+                />
+            )}
+
         </>
     )
 }

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { uploadTempFiles, createProduct, updateProduct, getProductByID } from "@/lib/api/products"
+import { ReviewModal } from "./ReviewModal"
 
 interface ProductModalProps {
     isOpen: boolean
@@ -47,6 +48,28 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
     const [deliveryFee, setDeliveryFee] = useState(0)
     const [totalCostBeforeMarkup, setTotalCostBeforeMarkup] = useState(0)
     const [calculatedSellingPrice, setCalculatedSellingPrice] = useState(0)
+    // Highlights
+    const [highlightsDetails, setHighlightsDetails] = useState<{ title: string; value: string }[]>([]);
+    const [detailTitle, setDetailTitle] = useState("");
+    const [detailValue, setDetailValue] = useState("");
+
+    const [highlightReasons, setHighlightReasons] = useState<string[]>([]);
+    const [newReason, setNewReason] = useState("");
+
+    // Care Instructions
+    const [careInstructions, setCareInstructions] = useState<string[]>([]);
+    const [newCare, setNewCare] = useState("");
+
+    // SEO
+    const [seoTitle, setSeoTitle] = useState("");
+    const [seoDescription, setSeoDescription] = useState("");
+    const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
+    const [newKeyword, setNewKeyword] = useState("");
+
+    // Social Tags
+    const [socialTags, setSocialTags] = useState<string[]>([]);
+    const [newSocialTag, setNewSocialTag] = useState("");
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
     // live calculations
     useEffect(() => {
@@ -79,6 +102,20 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                     setDeliveryFee(data.deliveryFee || 0)
                     setTotalCostBeforeMarkup(data.totalCostBeforeMarkup || 0)
                     setCalculatedSellingPrice(data.calculatedSellingPrice || 0)
+                    // Highlights
+                    setHighlightsDetails(data.highlights?.details || []);
+                    setHighlightReasons(data.highlights?.reasons || []);
+
+                    // Care Instructions
+                    setCareInstructions(data.careInstructions || []);
+
+                    // SEO
+                    setSeoTitle(data.seo?.title || "");
+                    setSeoDescription(data.seo?.description || "");
+                    setSeoKeywords(data.seo?.keywords || []);
+
+                    // Social Tags
+                    setSocialTags(data.socialTags || []);
 
                     setFiles(
                         data.images?.map((img: any) => ({
@@ -123,6 +160,14 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
         setFiles([])
         setNewOccasion("")
         setNewStyle("")
+        setHighlightsDetails([]);
+        setHighlightReasons([]);
+        setCareInstructions([]);
+        setSeoTitle("");
+        setSeoDescription("");
+        setSeoKeywords([]);
+        setSocialTags([]);
+
     }
 
     const handleClose = () => {
@@ -220,6 +265,18 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
             razorpayCutPercent,
             gstPercent,
             deliveryFee,
+            highlights: {
+                details: highlightsDetails,
+                reasons: highlightReasons,
+            },
+            careInstructions,
+            seo: {
+                title: seoTitle,
+                description: seoDescription,
+                keywords: seoKeywords,
+            },
+            socialTags,
+
         }
 
         try {
@@ -248,6 +305,15 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b shrink-0">
                     <h2 className="text-xl font-semibold">{productId ? "Edit Product" : "Add New Product"}</h2>
+                    {productId && (
+                        <Button
+                            className=" bg-yellow-600 hover:bg-yellow-700 mt-4"
+                            onClick={() => setReviewModalOpen(true)}
+                        >
+                            Manage Reviews
+                        </Button>
+                    )}
+
                     <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition">
                         <X className="w-5 h-5" />
                     </button>
@@ -451,6 +517,104 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                                             </label>
                                         </div>
                                     </div>
+                                    <div>
+                                        <Label>Highlights – Details</Label>
+                                        <div className="flex gap-2 mt-2">
+                                            <Input
+                                                placeholder="Title (e.g. Material)"
+                                                value={detailTitle}
+                                                onChange={(e) => setDetailTitle(e.target.value)}
+                                            />
+                                            <Input
+                                                placeholder="Value (e.g. 18k Gold Plated)"
+                                                value={detailValue}
+                                                onChange={(e) => setDetailValue(e.target.value)}
+                                            />
+                                            <Button
+                                                size="sm"
+                                                onClick={() => {
+                                                    if (detailTitle && detailValue) {
+                                                        setHighlightsDetails([...highlightsDetails, { title: detailTitle, value: detailValue }]);
+                                                        setDetailTitle("");
+                                                        setDetailValue("");
+                                                    }
+                                                }}
+                                            >
+                                                <Plus size={16} />
+                                            </Button>
+                                        </div>
+
+                                        <div className="mt-2 space-y-1">
+                                            {highlightsDetails.map((d, i) => (
+                                                <div key={i} className="flex justify-between bg-gray-100 p-2 rounded">
+                                                    <span>{d.title}: {d.value}</span>
+                                                    <button onClick={() => {
+                                                        setHighlightsDetails(highlightsDetails.filter((_, idx) => idx !== i))
+                                                    }}>
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label>Why You'll Love It (Reasons)</Label>
+                                        <div className="flex gap-2 mt-2">
+                                            <Input
+                                                placeholder="Add reason"
+                                                value={newReason}
+                                                onChange={(e) => setNewReason(e.target.value)}
+                                            />
+                                            <Button size="sm" onClick={() => {
+                                                if (newReason.trim()) {
+                                                    setHighlightReasons([...highlightReasons, newReason.trim()]);
+                                                    setNewReason("");
+                                                }
+                                            }}>
+                                                <Plus size={16} />
+                                            </Button>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {highlightReasons.map((reason, i) => (
+                                                <div key={i} className="bg-yellow-100 px-3 py-1 rounded-full flex items-center gap-2 text-sm">
+                                                    {reason}
+                                                    <X
+                                                        size={14}
+                                                        className="cursor-pointer"
+                                                        onClick={() => setHighlightReasons(highlightReasons.filter((_, idx) => idx !== i))}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label>Care Instructions</Label>
+                                        <div className="flex gap-2 mt-2">
+                                            <Input
+                                                placeholder="Add instruction"
+                                                value={newCare}
+                                                onChange={(e) => setNewCare(e.target.value)}
+                                            />
+                                            <Button size="sm" onClick={() => {
+                                                if (newCare.trim()) {
+                                                    setCareInstructions([...careInstructions, newCare.trim()]);
+                                                    setNewCare("");
+                                                }
+                                            }}>
+                                                <Plus size={16} />
+                                            </Button>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {careInstructions.map((instr, i) => (
+                                                <div key={i} className="bg-green-100 px-3 py-1 rounded-full flex items-center gap-2 text-sm">
+                                                    {instr}
+                                                    <X size={14} onClick={() => setCareInstructions(careInstructions.filter((_, idx) => idx !== i))} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
 
                                     {/* Occasion Chips */}
                                     <div>
@@ -541,6 +705,75 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                                                     </div>
                                                 ))}
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-6 border-t pt-4">
+                                        <Label>SEO Title</Label>
+                                        <Input
+                                            value={seoTitle}
+                                            onChange={(e) => setSeoTitle(e.target.value)}
+                                            placeholder="SEO Title"
+                                        />
+
+                                        <Label className="mt-3">SEO Description</Label>
+                                        <Textarea
+                                            rows={3}
+                                            value={seoDescription}
+                                            onChange={(e) => setSeoDescription(e.target.value)}
+                                            placeholder="SEO Description"
+                                        />
+
+                                        <Label className="mt-3">SEO Keywords</Label>
+                                        <div className="flex gap-2 mt-2">
+                                            <Input
+                                                value={newKeyword}
+                                                onChange={(e) => setNewKeyword(e.target.value)}
+                                                placeholder="Add keyword"
+                                            />
+                                            <Button size="sm" onClick={() => {
+                                                if (newKeyword.trim()) {
+                                                    setSeoKeywords([...seoKeywords, newKeyword.trim()]);
+                                                    setNewKeyword("");
+                                                }
+                                            }}>
+                                                <Plus size={14} />
+                                            </Button>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {seoKeywords.map((k, i) => (
+                                                <div key={i} className="bg-blue-100 px-3 py-1 rounded-full flex items-center gap-2 text-sm">
+                                                    {k}
+                                                    <X size={14} onClick={() => setSeoKeywords(seoKeywords.filter((_, idx) => idx !== i))} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label>Instagram / Social Tags</Label>
+                                        <div className="flex gap-2 mt-2">
+                                            <Input
+                                                value={newSocialTag}
+                                                onChange={(e) => setNewSocialTag(e.target.value)}
+                                                placeholder="#goldbracelet"
+                                            />
+                                            <Button size="sm" onClick={() => {
+                                                if (newSocialTag.trim()) {
+                                                    setSocialTags([...socialTags, newSocialTag.trim()]);
+                                                    setNewSocialTag("");
+                                                }
+                                            }}>
+                                                <Plus size={14} />
+                                            </Button>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {socialTags.map((tag, i) => (
+                                                <div key={i} className="bg-pink-100 px-3 py-1 rounded-full flex items-center gap-2 text-sm">
+                                                    {tag}
+                                                    <X size={14} onClick={() => setSocialTags(socialTags.filter((_, idx) => idx !== i))} />
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
 
@@ -635,6 +868,13 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                     </Button>
                 </div>
             </div>
+            {reviewModalOpen && (
+                <ReviewModal
+                    productId={productId!}
+                    onClose={() => setReviewModalOpen(false)}
+                />
+            )}
+
         </div>
     )
 }

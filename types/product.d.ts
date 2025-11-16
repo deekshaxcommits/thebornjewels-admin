@@ -2,40 +2,112 @@ export interface ProductImage {
     url: string;
     key: string;
     _id?: string;
-    type?: "image" | "video"; // auto-detect from extension
+    type?: "image" | "video";
 }
 
+/* -----------------------------
+   Reviews
+----------------------------- */
+export interface ReviewImage {
+    url: string;
+    key: string;
+}
+
+export interface ProductReview {
+    _id: string;
+    user?: {
+        _id: string;
+        name: string;
+        profile?: string;
+    };
+    name?: string;
+    rating: number;
+    comment?: string;
+    images?: ReviewImage[];
+    createdAt: string;
+}
+
+/* -----------------------------
+   Metadata (occasion, style)
+----------------------------- */
 export interface ProductMeta {
     occasion: string[];
     style: string[];
 }
 
+/* -----------------------------
+   Highlights Section
+----------------------------- */
+export interface HighlightDetail {
+    title: string;
+    value: string;
+}
+
+export interface ProductHighlights {
+    details: HighlightDetail[];
+    reasons: string[];
+}
+
+/* -----------------------------
+   SEO
+----------------------------- */
+export interface ProductSEO {
+    title?: string;
+    description?: string;
+    keywords?: string[];
+}
+
+/* -----------------------------
+   MAIN PRODUCT INTERFACE
+----------------------------- */
 export interface Product {
     _id: string;
+
     title: string;
     description?: string;
     price: number;
     originalPrice?: number;
     category: string;
     material: string;
-    stock?: number;
+    stock: number;
     sku?: string;
+
     images: ProductImage[];
-    features?: string[];
-    specifications?: Record<string, string>;
-    meta?: ProductMeta;
+
+    // flags
     isNewArrival?: boolean;
     isBestSeller?: boolean;
-    inStock?: boolean;
     isActive?: boolean;
+    inStock?: boolean;
 
-    // 🧮 Admin Pricing Fields
-    buyPrice?: number;                    // Base cost from supplier
-    gstPercent?: number;                  // GST percentage (default 3%)
-    razorpayCutPercent?: number;          // Razorpay fee %
-    deliveryFee?: number;                 // Delivery cost
-    totalCostBeforeMarkup?: number;       // (buy + gst + razorpay + delivery)
-    calculatedSellingPrice?: number;      // final SP = totalCostBeforeMarkup * 2
+    // meta
+    meta?: ProductMeta;
+
+    // highlights
+    highlights?: ProductHighlights;
+
+    // reviews
+    reviews?: ProductReview[];
+    rating?: number;
+    reviewsCount?: number;
+
+    // care instructions
+    careInstructions?: string[];
+
+    // seo
+    seo?: ProductSEO;
+
+    // social tags
+    socialTags?: string[];
+
+    // admin-only pricing
+    buyPrice?: number;
+    gstPercent?: number;
+    razorpayCutPercent?: number;
+    deliveryFee?: number;
+
+    totalCostBeforeMarkup?: number;
+    calculatedSellingPrice?: number;
 
     createdAt?: string;
     updatedAt?: string;

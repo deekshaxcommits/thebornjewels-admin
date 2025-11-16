@@ -30,6 +30,11 @@ export const deactivateProduct = async (id: string) => {
     return res.data.message;
 };
 
+export const deleteReview = async (productId: string, reviewId: string) => {
+    const res = await api.delete(`/product/${productId}/reviews/${reviewId}`);
+    return res.data.message;
+};
+
 export const reactivateProduct = async (id: string) => {
     const res = await api.put(`/product/${id}/reactivate`);
     return res.data.data;
