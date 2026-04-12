@@ -52,6 +52,11 @@ export default function Layout({ children }: LayoutProps) {
             icon: <IconUsers className="h-5 w-5" />,
         },
         {
+            label: "Coupons",
+            href: "/coupons",
+            icon: <IconDiscountCheck className="h-5 w-5" />,
+        },
+        {
             label: "Settings",
             href: "/settings",
             icon: <IconSettings className="h-5 w-5" />,

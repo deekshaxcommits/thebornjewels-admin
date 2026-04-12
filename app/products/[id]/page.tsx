@@ -54,8 +54,6 @@ export default function ProductPage() {
                     <span>/</span>
                     <span className="text-zinc-900">{product.title}</span>
                 </nav>
-
-
             </div>
         </div>
     );

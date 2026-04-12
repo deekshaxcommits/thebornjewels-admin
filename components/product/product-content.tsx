@@ -13,6 +13,7 @@ import { ProductModal } from './product-modal'
 import { ProductDetailsModal } from './product-detail-model'
 import { ReviewModal } from './ReviewModal'
 import { Product } from '@/types/product'
+import { API_BASE_URL } from '@/lib/api'
 
 const dmFont = DM_Serif_Display({
     subsets: ["latin"],
@@ -312,8 +313,8 @@ export function ProductContent() {
                                                 <td className="px-4 py-4 max-w-[300px]">
                                                     <div className="flex items-center gap-3">
                                                         <img
-                                                            onClick={() => setZoomImage(product.images?.[0]?.url)}
-                                                            src={product.image || product.images?.[0]?.url || "https://via.placeholder.com/50"}
+                                                            onClick={() => setZoomImage(`${API_BASE_URL}${product.image || product.images?.[0]?.url}`)}
+                                                            src={`${API_BASE_URL}${product.image || product.images?.[0]?.url}` || "https://via.placeholder.com/50"}
                                                             alt={product.title}
                                                             className="w-12 h-12 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform"
                                                         />
