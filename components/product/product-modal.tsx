@@ -1,4 +1,3 @@
-// components/product-modal.tsx
 'use client'
 
 import { useState, useEffect } from "react"
@@ -25,12 +24,17 @@ interface ProductFile {
 }
 
 const materials = ["Gold", "Silver", "Platinum", "Rose Gold"]
-const categories = ["Rings", "Necklaces", "Earrings", "Bracelets"]
+const categories = ["Rings", "Necklaces", "Earrings", "Bracelets", "Sets", "Combo"]
+const itemTypes = [
+    { value: "product", label: "Product", color: "blue" },
+    { value: "combo", label: "Combo", color: "purple" }
+]
 
 export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductModalProps) {
     const [loading, setLoading] = useState(false)
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
+    const [itemType, setItemType] = useState<"product" | "combo">("product")
     const [price, setPrice] = useState(0)
     const [originalPrice, setOriginalPrice] = useState(0)
     const [category, setCategory] = useState(categories[0])
@@ -88,6 +92,7 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                 .then((data) => {
                     setTitle(data.title)
                     setDescription(data.description)
+                    setItemType(data.itemType || "product")
                     setPrice(data.price)
                     setOriginalPrice(data.originalPrice)
                     setCategory(data.category)
@@ -149,6 +154,7 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
     const resetForm = () => {
         setTitle("")
         setDescription("")
+        setItemType("product")
         setPrice(0)
         setOriginalPrice(0)
         setCategory(categories[0])
@@ -167,7 +173,10 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
         setSeoDescription("");
         setSeoKeywords([]);
         setSocialTags([]);
-
+        setBuyPrice(0);
+        setRazorpayCutPercent(0);
+        setGstPercent(3);
+        setDeliveryFee(0);
     }
 
     const handleClose = () => {
@@ -252,6 +261,7 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
         const payload = {
             title,
             description,
+            itemType,
             price,
             originalPrice,
             category,
@@ -307,7 +317,7 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                     <h2 className="text-xl font-semibold">{productId ? "Edit Product" : "Add New Product"}</h2>
                     {productId && (
                         <Button
-                            className=" bg-yellow-600 hover:bg-yellow-700 mt-4"
+                            className="bg-yellow-600 hover:bg-yellow-700"
                             onClick={() => setReviewModalOpen(true)}
                         >
                             Manage Reviews
@@ -328,6 +338,34 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Left */}
                                 <div className="space-y-4">
+                                    {/* Item Type Selection - Chips/Dropdown */}
+                                    <div>
+                                        <Label htmlFor="itemType">Item Type *</Label>
+                                        <div className="flex gap-3 mt-2">
+                                            {itemTypes.map((type) => (
+                                                <button
+                                                    key={type.value}
+                                                    type="button"
+                                                    onClick={() => setItemType(type.value as "product" | "combo")}
+                                                    className={`
+                                                        px-4 py-2 rounded-lg font-medium transition-all duration-200
+                                                        ${itemType === type.value
+                                                            ? `bg-${type.color}-600 text-white shadow-md ring-2 ring-${type.color}-300`
+                                                            : `bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200`
+                                                        }
+                                                    `}
+                                                >
+                                                    {type.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {itemType === "combo" 
+                                                ? "Combos are bundles of products sold together (e.g., Necklace + Earrings Set)"
+                                                : "Products are individual items (e.g., a single necklace)"}
+                                        </p>
+                                    </div>
+
                                     <div>
                                         <Label htmlFor="title">Title *</Label>
                                         <Input
