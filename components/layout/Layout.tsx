@@ -62,6 +62,16 @@ export default function Layout({ children }: LayoutProps) {
             icon: <IconDiscountCheck className="h-5 w-5" />,
         },
         {
+            label: "Hamper Templates",
+            href: "/hamper-templates",
+            icon: <IconDiscountCheck className="h-5 w-5" />,
+        },
+        {
+            label: "Add Ons",
+            href: "/addons",
+            icon: <IconDiscountCheck className="h-5 w-5" />,
+        },
+        {
             label: "Settings",
             href: "/settings",
             icon: <IconSettings className="h-5 w-5" />,
