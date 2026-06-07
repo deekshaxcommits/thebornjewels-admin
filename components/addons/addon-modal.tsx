@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useCreateAddon, useUpdateAddon } from '@/hooks/useAddons'
 import { Package, X, Upload, Loader2, ImagePlus, AlertCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, imgUrl } from '@/lib/utils'
 
 /* ─────────────────────────────────────────────
    Types
@@ -26,6 +26,9 @@ interface FormData {
   description: string
   pricingType: 'free' | 'paid'
   price: string
+  inputType: 'standard' | 'message' | 'image_upload'
+  allowQuantity: boolean
+  maxQuantity: string
 }
 
 interface FormErrors {
@@ -51,6 +54,9 @@ export function AddonModal({ isOpen, onClose, editingAddon }: AddonModalProps) {
     description: '',
     pricingType: 'paid',
     price: '',
+    inputType: 'standard',
+    allowQuantity: false,
+    maxQuantity: '10',
   })
   const [images, setImages] = useState<AddonImage[]>([])
   const [errors, setErrors] = useState<FormErrors>({})
@@ -71,7 +77,7 @@ export function AddonModal({ isOpen, onClose, editingAddon }: AddonModalProps) {
     setSubmitError(null)
 
     if (!editingAddon) {
-      setFormData({ title: '', description: '', pricingType: 'paid', price: '' })
+      setFormData({ title: '', description: '', pricingType: 'paid', price: '', inputType: 'standard', allowQuantity: false, maxQuantity: '10' })
       setImages([])
     } else {
       setFormData({
@@ -79,6 +85,9 @@ export function AddonModal({ isOpen, onClose, editingAddon }: AddonModalProps) {
         description: editingAddon.description ?? '',
         pricingType: editingAddon.pricingType ?? 'paid',
         price: editingAddon.price != null ? String(editingAddon.price) : '',
+        inputType: editingAddon.inputType ?? 'standard',
+        allowQuantity: editingAddon.allowQuantity ?? false,
+        maxQuantity: editingAddon.maxQuantity != null ? String(editingAddon.maxQuantity) : '10',
       })
       setImages(
         (editingAddon.images ?? []).map((img: any) => ({ url: img.url, key: img.key }))
@@ -146,11 +155,15 @@ export function AddonModal({ isOpen, onClose, editingAddon }: AddonModalProps) {
     setSubmitError(null)
     try {
       const payload = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        pricingType: formData.pricingType,
         price: formData.pricingType === 'free' ? 0 : Number(formData.price),
-        // Images that already have a key are existing server images; new ones (file property) would be uploaded separately
+        inputType: formData.inputType,
+        allowQuantity: formData.allowQuantity,
+        maxQuantity: Number(formData.maxQuantity) || 10,
         images: images
-          .filter((img) => !img.file) // pass only already-uploaded images; handle file upload in your API layer
+          .filter((img) => !img.file)
           .map(({ url, key }) => ({ url, key })),
       }
       if (editingAddon) {
@@ -347,6 +360,78 @@ export function AddonModal({ isOpen, onClose, editingAddon }: AddonModalProps) {
               </div>
             )}
 
+            {/* Input Type */}
+            <div className="space-y-2">
+              <Label className="text-[12px] font-medium text-zinc-600">Addon Type</Label>
+              <p className="text-[11px] text-zinc-400">How does the customer interact with this addon?</p>
+              <div className="grid grid-cols-3 gap-2" role="radiogroup">
+                {([
+                  { value: 'standard', label: 'Standard', desc: 'Just select it' },
+                  { value: 'message', label: 'Message', desc: 'Customer writes text' },
+                  { value: 'image_upload', label: 'Photos', desc: 'Customer uploads images' },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={formData.inputType === opt.value}
+                    onClick={() => setFormData((prev) => ({ ...prev, inputType: opt.value }))}
+                    className={cn(
+                      'py-2 px-2 rounded-xl border text-center text-[12px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40',
+                      formData.inputType === opt.value
+                        ? 'border-teal-500 bg-teal-50 text-teal-700'
+                        : 'border-zinc-200 text-zinc-500 hover:border-zinc-300'
+                    )}
+                  >
+                    <p className="font-medium">{opt.label}</p>
+                    <p className="text-[10px] text-zinc-400 mt-0.5 leading-tight">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Allow Quantity */}
+            <div className="flex items-center justify-between bg-zinc-50 rounded-xl border border-zinc-200 px-4 py-3">
+              <div>
+                <p className="text-[13px] font-medium text-zinc-700">Allow quantity selection</p>
+                <p className="text-[11px] text-zinc-400 mt-0.5">e.g. polaroids — ₹10 per piece</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, allowQuantity: !prev.allowQuantity }))}
+                className={cn(
+                  'relative w-10 h-5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50',
+                  formData.allowQuantity ? 'bg-teal-500' : 'bg-zinc-300'
+                )}
+                role="switch"
+                aria-checked={formData.allowQuantity}
+              >
+                <span className={cn(
+                  'absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                  formData.allowQuantity ? 'translate-x-5' : 'translate-x-0.5'
+                )} />
+              </button>
+            </div>
+
+            {/* Max Quantity */}
+            {formData.allowQuantity && (
+              <div className="space-y-1.5">
+                <Label htmlFor="addon-max-qty" className="text-[12px] font-medium text-zinc-600">
+                  Max quantity per order
+                </Label>
+                <Input
+                  id="addon-max-qty"
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="10"
+                  className="h-10 text-[13px] border-zinc-200 rounded-xl w-32"
+                  value={formData.maxQuantity}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, maxQuantity: e.target.value }))}
+                />
+              </div>
+            )}
+
             {/* Images */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -366,7 +451,7 @@ export function AddonModal({ isOpen, onClose, editingAddon }: AddonModalProps) {
                       className="aspect-square rounded-xl overflow-hidden border border-zinc-200 relative group"
                     >
                       <img
-                        src={img.url}
+                        src={imgUrl(img.url)}
                         alt={`Addon image ${i + 1}`}
                         className="w-full h-full object-cover"
                       />

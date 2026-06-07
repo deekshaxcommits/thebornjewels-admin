@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Product } from "@/types/product"
 import { useState } from "react"
+import { imgUrl } from "@/lib/utils"
 
 interface ProductDetailsModalProps {
     isOpen: boolean
@@ -125,14 +126,14 @@ export function ProductDetailsModal({
                                             key={allMedia[selectedImageIndex].url}
                                         >
                                             <source
-                                                src={allMedia[selectedImageIndex].url}
+                                                src={imgUrl(allMedia[selectedImageIndex].url)}
                                                 type="video/mp4"
                                             />
                                             Your browser does not support the video tag.
                                         </video>
                                     ) : (
                                         <img
-                                            src={allMedia[selectedImageIndex].url}
+                                            src={imgUrl(allMedia[selectedImageIndex].url)}
                                             alt={product.title}
                                             className="w-full h-full object-cover"
                                         />
@@ -157,7 +158,7 @@ export function ProductDetailsModal({
                                                 </div>
                                             ) : (
                                                 <img
-                                                    src={media.url}
+                                                    src={imgUrl(media.url)}
                                                     alt={`${product.title} ${idx + 1}`}
                                                     className="w-full h-full object-cover"
                                                 />

@@ -10,6 +10,7 @@ import {
     IconLogout,
     IconDiscountOff,
     IconDiscountCheck,
+    IconLayout2,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -62,6 +63,16 @@ export default function Layout({ children }: LayoutProps) {
             icon: <IconDiscountCheck className="h-5 w-5" />,
         },
         {
+            label: "Hampers",
+            href: "/hampers",
+            icon: <IconDiscountCheck className="h-5 w-5" />,
+        },
+        {
+            label: "Abandoned Carts",
+            href: "/abandoned-carts",
+            icon: <IconDiscountCheck className="h-5 w-5" />,
+        },
+        {
             label: "Hamper Templates",
             href: "/hamper-templates",
             icon: <IconDiscountCheck className="h-5 w-5" />,
@@ -70,6 +81,16 @@ export default function Layout({ children }: LayoutProps) {
             label: "Add Ons",
             href: "/addons",
             icon: <IconDiscountCheck className="h-5 w-5" />,
+        },
+        {
+            label: "UGC / Reels",
+            href: "/ugc",
+            icon: <IconDiscountCheck className="h-5 w-5" />,
+        },
+        {
+            label: "Content (CMS)",
+            href: "/cms",
+            icon: <IconLayout2 className="h-5 w-5" />,
         },
         {
             label: "Settings",

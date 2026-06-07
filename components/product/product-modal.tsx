@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { uploadTempFiles, createProduct, updateProduct, getProductByID } from "@/lib/api/products"
+import { imgUrl } from "@/lib/utils"
 import { ReviewModal } from "./ReviewModal"
 
 interface ProductModalProps {
@@ -75,6 +76,10 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
     const [newSocialTag, setNewSocialTag] = useState("");
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
+    // Reels inspo
+    const [inspirationReels, setInspirationReels] = useState<string[]>([]);
+    const [newReel, setNewReel] = useState("");
+
     // live calculations
     useEffect(() => {
         const razorpayCut = (razorpayCutPercent / 100) * buyPrice
@@ -121,6 +126,9 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
 
                     // Social Tags
                     setSocialTags(data.socialTags || []);
+
+                    // Reels
+                    setInspirationReels(data.inspirationReels || []);
 
                     setFiles(
                         data.images?.map((img: any) => ({
@@ -173,6 +181,8 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
         setSeoDescription("");
         setSeoKeywords([]);
         setSocialTags([]);
+        setInspirationReels([]);
+        setNewReel("");
         setBuyPrice(0);
         setRazorpayCutPercent(0);
         setGstPercent(3);
@@ -286,7 +296,7 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                 keywords: seoKeywords,
             },
             socialTags,
-
+            inspirationReels,
         }
 
         try {
@@ -815,6 +825,40 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                                         </div>
                                     </div>
 
+                                    {/* Reels Inspo */}
+                                    <div>
+                                        <Label>Instagram Reels Inspo</Label>
+                                        <div className="flex gap-2 mt-1">
+                                            <Input
+                                                placeholder="https://www.instagram.com/reel/..."
+                                                value={newReel}
+                                                onChange={e => setNewReel(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter' && newReel.trim()) {
+                                                        setInspirationReels([...inspirationReels, newReel.trim()]);
+                                                        setNewReel('');
+                                                    }
+                                                }}
+                                            />
+                                            <Button type="button" variant="outline" onClick={() => {
+                                                if (newReel.trim()) {
+                                                    setInspirationReels([...inspirationReels, newReel.trim()]);
+                                                    setNewReel('');
+                                                }
+                                            }}>
+                                                <Plus size={16} />
+                                            </Button>
+                                        </div>
+                                        <div className="flex flex-col gap-1.5 mt-2">
+                                            {inspirationReels.map((reel, i) => (
+                                                <div key={i} className="bg-pink-50 border border-pink-200 px-3 py-1.5 rounded-lg flex items-center justify-between gap-2 text-xs text-pink-800">
+                                                    <span className="truncate">{reel}</span>
+                                                    <X size={12} className="shrink-0 cursor-pointer hover:text-red-600" onClick={() => setInspirationReels(inspirationReels.filter((_, idx) => idx !== i))} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
                                     <div>
                                         <Label>Images / Videos</Label>
                                         <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:border-blue-500 transition-colors">
@@ -847,7 +891,7 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                                                         <div key={i} className="relative group">
                                                             {f.type === "image" ? (
                                                                 <img
-                                                                    src={f.url || (f.file ? URL.createObjectURL(f.file) : '')}
+                                                                    src={imgUrl(f.url) || (f.file ? URL.createObjectURL(f.file) : '')}
                                                                     alt={`preview-${i}`}
                                                                     className="w-full h-20 object-cover rounded border"
                                                                     onError={(e) => {

@@ -31,6 +31,7 @@ const emptyForm = {
   bannerImage: null as { key: string; url: string } | null,
   items: [] as { type: 'Product' | 'Combo'; item: string }[],
   featuredCombo: '',
+  inspirationReels: [] as string[],
 }
 
 // ─── Searchable picker for a single item row ──────────────────────────────────
@@ -232,9 +233,10 @@ useEffect(() => {
         priority: data.priority ?? 0,
         bannerImage: data.bannerImage?.key ? data.bannerImage : null,
         items: transformedItems,
-        featuredCombo: typeof data.featuredCombo === 'object' 
-          ? data.featuredCombo?._id ?? '' 
+        featuredCombo: typeof data.featuredCombo === 'object'
+          ? data.featuredCombo?._id ?? ''
           : data.featuredCombo ?? '',
+        inspirationReels: data.inspirationReels ?? [],
       })
       
       if (data.bannerImage?.url) {
@@ -327,6 +329,7 @@ useEffect(() => {
       priority: Number(form.priority),
       items: validItems,
       featuredCombo: form.featuredCombo.trim() || undefined,
+      inspirationReels: form.inspirationReels,
     }
 
     if (form.bannerImage?.key) {
@@ -474,6 +477,59 @@ useEffect(() => {
                 onChange={handleBannerChange}
                 className="hidden"
               />
+            </div>
+
+            {/* Reels Inspo */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-1 block">
+                Instagram Reels Inspo
+                <span className="text-gray-400 font-normal ml-1">(optional)</span>
+              </Label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="https://www.instagram.com/reel/..."
+                  id="new-reel-col"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = (e.target as HTMLInputElement).value.trim()
+                      if (val) {
+                        setForm((p) => ({ ...p, inspirationReels: [...p.inspirationReels, val] }));
+                        (e.target as HTMLInputElement).value = ''
+                      }
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById('new-reel-col') as HTMLInputElement
+                    if (input?.value.trim()) {
+                      setForm((p) => ({ ...p, inspirationReels: [...p.inspirationReels, input.value.trim()] }))
+                      input.value = ''
+                    }
+                  }}
+                  className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              {form.inspirationReels.length > 0 && (
+                <div className="flex flex-col gap-1.5 mt-2">
+                  {form.inspirationReels.map((r, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-pink-50 border border-pink-100 rounded-lg px-3 py-1.5 text-xs text-pink-700">
+                      <span className="flex-1 truncate">{r}</span>
+                      <button
+                        onClick={() => setForm((p) => ({ ...p, inspirationReels: p.inspirationReels.filter((_, idx) => idx !== i) }))}
+                        className="text-pink-400 hover:text-red-500"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Featured Combo */}

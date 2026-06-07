@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteReview, getProductByID } from "@/lib/api/products";
 import { Product, ProductReview } from "@/types/product";
+import { imgUrl } from "@/lib/utils";
 
 interface ReviewModalProps {
     productId: string;
@@ -107,7 +108,7 @@ export function ReviewModal({ productId, onClose }: ReviewModalProps) {
                                             {review.images.map((img, i) => (
                                                 <img
                                                     key={i}
-                                                    src={img.url}
+                                                    src={imgUrl(img.url)}
                                                     className="w-16 h-16 object-cover rounded"
                                                 />
                                             ))}

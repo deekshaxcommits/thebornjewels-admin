@@ -20,6 +20,7 @@ import {
 } from '@/hooks/useHamperTemplates'
 
 import { HamperTemplateModal } from '@/components/hamper-templates/hamper-template-modal'
+import { imgUrl } from '@/lib/utils'
 
 export default function HamperTemplatesPage() {
   const { data, isLoading } =
@@ -134,7 +135,7 @@ export default function HamperTemplatesPage() {
                   <div className='aspect-[4/3] bg-zinc-100 overflow-hidden relative'>
                     {template.thumbnail?.url ? (
                       <img
-                        src={template.thumbnail.url}
+                        src={imgUrl(template.thumbnail.url)}
                         alt={template.title}
                         className='w-full h-full object-cover'
                       />

@@ -9,6 +9,7 @@ import { Product } from "@/types/product";
 import { toast } from "sonner";
 import { Loader2, Heart, CheckCircle, ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { imgUrl } from "@/lib/utils";
 
 interface ProductCardProps {
     product: Product;
@@ -46,7 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
         [cartItems, product._id]
     );
 
-    const imageSrc = product.images?.[0]?.url || "https://i.pinimg.com/1200x/a6/84/f7/a684f7b71caea15faf484a8e0491617d.jpg";
+    const imageSrc = imgUrl(product.images?.[0]?.url) || "https://i.pinimg.com/1200x/a6/84/f7/a684f7b71caea15faf484a8e0491617d.jpg";
 
     // Helper to support both sync and async context functions
     const ensurePromise = <T,>(maybePromiseOrValue: Promise<T> | T) => Promise.resolve(maybePromiseOrValue);

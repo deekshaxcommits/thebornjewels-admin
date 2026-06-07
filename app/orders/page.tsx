@@ -9,6 +9,7 @@ import { IOrder } from "@/types/order"
 import { cn } from "@/lib/utils"
 import OrderDetailsModal from "@/components/orders/OrderDetailsModel"
 import { OrderModal } from "@/components/orders/order-modal"
+import DateFilter, { DateFilterState, isInDateRange } from "@/components/ui/DateFilter"
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<IOrder[]>([])
@@ -19,6 +20,8 @@ export default function OrdersPage() {
     const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
+    const [dateFilter, setDateFilter] = useState<DateFilterState>({ from: '', to: '', preset: '' })
+    const [statusFilter, setStatusFilter] = useState('all')
     const [trackingModal, setTrackingModal] = useState<{ id: string; visible: boolean }>({ id: "", visible: false })
     const [tracking, setTracking] = useState({ number: "", carrier: "", url: "", estimatedDelivery: "" })
     const [saving, setSaving] = useState(false)
@@ -40,18 +43,21 @@ export default function OrdersPage() {
         fetchOrders()
     }, [])
 
-    // 🔍 Filter by ID / name / email
+    // Filter by search, date range, and status
     useEffect(() => {
-        if (!searchQuery.trim()) return setFilteredOrders(orders)
-        const q = searchQuery.toLowerCase()
-        setFilteredOrders(
-            orders.filter(order =>
+        const q = searchQuery.toLowerCase().trim()
+        setFilteredOrders(orders.filter(order => {
+            if (q && !(
                 order._id.toLowerCase().includes(q) ||
                 (order as any).user?.name?.toLowerCase().includes(q) ||
-                (order as any).user?.email?.toLowerCase().includes(q)
-            )
-        )
-    }, [searchQuery, orders])
+                (order as any).user?.email?.toLowerCase().includes(q) ||
+                (order as any).user?.phone?.includes(q)
+            )) return false
+            if (statusFilter !== 'all' && (order as any).status !== statusFilter) return false
+            if (!isInDateRange((order as any).createdAt, dateFilter.from, dateFilter.to, dateFilter.preset)) return false
+            return true
+        }))
+    }, [searchQuery, orders, dateFilter, statusFilter])
 
     const handleStatusChange = async (id: string, status: string) => {
         if (status === "shipped") {
@@ -168,16 +174,33 @@ export default function OrdersPage() {
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-3xl font-semibold tracking-tight text-gray-800">📦 Orders Management</h1>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <input
-                        type="text"
-                        placeholder="Search by Order ID or User..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
-                    />
-                    <Button onClick={() => setIsModalOpen(true)}>+ Add Order</Button>
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">{filteredOrders.length} of {orders.length} orders</p>
+                </div>
+                <Button onClick={() => setIsModalOpen(true)} className="shrink-0">+ Add Order</Button>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2">
+                <input
+                    type="text"
+                    placeholder="Search by ID, name, email, phone…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-300 focus:outline-none w-64"
+                />
+                <DateFilter value={dateFilter} onChange={setDateFilter} />
+                <div className="flex gap-1">
+                    {['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'].map(s => (
+                        <button
+                            key={s}
+                            onClick={() => setStatusFilter(s)}
+                            className={cn('px-3 py-1.5 text-xs rounded-lg font-medium capitalize transition-colors',
+                                statusFilter === s ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-white border border-gray-200 text-gray-600 hover:border-amber-300'
+                            )}
+                        >{s}</button>
+                    ))}
                 </div>
             </div>
 

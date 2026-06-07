@@ -11,8 +11,8 @@ export const requestOtp = async (email: string, purpose: "Login" | "Register" = 
 /**
  * Verify OTP and log in existing user
  */
-export const verifyAndLogin = async (email: string, otp: string) => {
-    const res = await api.post("/auth/login", { email, otp });
+export const verifyAndLogin = async (email: string, password: string) => {
+    const res = await api.post("/auth/login", { email, password });
     if (res.data.success) {
         localStorage.setItem("token", res.data.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.data.user));

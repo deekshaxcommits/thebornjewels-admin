@@ -19,6 +19,7 @@ import {
 } from '@/hooks/useAddons'
 
 import { AddonModal } from '@/components/addons/addon-modal'
+import { imgUrl } from '@/lib/utils'
 
 export default function AddonsPage() {
   const { data, isLoading } =
@@ -127,9 +128,7 @@ export default function AddonsPage() {
                 <div className='aspect-square bg-zinc-100 overflow-hidden'>
                   {addon.images?.[0]?.url ? (
                     <img
-                      src={
-                        addon.images[0].url
-                      }
+                      src={imgUrl(addon.images[0].url)}
                       alt={addon.title}
                       className='w-full h-full object-cover'
                     />
@@ -155,18 +154,31 @@ export default function AddonsPage() {
                     </div>
                   </div>
 
-                  {/* PRICE */}
-
-                  <div className='mb-5'>
-                    {addon.pricingType ===
-                    'free' ? (
-                      <div className='inline-flex px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium'>
-                        Free Addon
-                      </div>
+                  {/* PRICE + TYPE BADGES */}
+                  <div className='mb-4 flex flex-wrap gap-2'>
+                    {addon.pricingType === 'free' ? (
+                      <span className='inline-flex px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium'>
+                        Free
+                      </span>
                     ) : (
-                      <div className='inline-flex px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-sm font-medium'>
-                        ₹{addon.price}
-                      </div>
+                      <span className='inline-flex px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-700 text-xs font-medium'>
+                        ₹{addon.price}{addon.allowQuantity ? ' / unit' : ''}
+                      </span>
+                    )}
+                    {addon.inputType === 'message' && (
+                      <span className='inline-flex px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium'>
+                        ✍ Message
+                      </span>
+                    )}
+                    {addon.inputType === 'image_upload' && (
+                      <span className='inline-flex px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium'>
+                        📷 Photos
+                      </span>
+                    )}
+                    {addon.allowQuantity && (
+                      <span className='inline-flex px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium'>
+                        Qty up to {addon.maxQuantity}
+                      </span>
                     )}
                   </div>
 
