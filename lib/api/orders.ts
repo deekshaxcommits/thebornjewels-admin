@@ -18,9 +18,11 @@ export const getAllOrders = async (): Promise<IOrder[]> => {
 export const addManualOrder = async (payload: {
     userId: string
     items: {
-        product: string
+        itemType: "product" | "hamper"
+        product?: string
+        hamper?: string
         quantity: number
-        finalPrice?: number
+        unitPrice?: number
     }[]
     shippingAddress: {
         name: string

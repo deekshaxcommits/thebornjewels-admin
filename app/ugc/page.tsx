@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Trash2, Eye, EyeOff, Instagram, Youtube, GripVertical, RefreshCw, ExternalLink } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Plus, Trash2, Eye, EyeOff, Instagram, Youtube, RefreshCw, ExternalLink, ChevronUp, ChevronDown, Save, Pencil, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useUGC, useCreateUGC, useUpdateUGC, useDeleteUGC } from '@/hooks/useUGC'
+import { useUGC, useCreateUGC, useUpdateUGC, useDeleteUGC, useReorderUGC } from '@/hooks/useUGC'
 import { UGCItem } from '@/lib/api/ugc'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -50,9 +50,49 @@ function EmbedPreview({ url, type }: { url: string; type: 'instagram' | 'youtube
     )
 }
 
-function UGCCard({ item }: { item: UGCItem }) {
+function UGCCard({
+    item,
+    index,
+    total,
+    onMove,
+    moving,
+}: {
+    item: UGCItem
+    index: number
+    total: number
+    onMove: (index: number, direction: -1 | 1) => void
+    moving: boolean
+}) {
     const updateMutation = useUpdateUGC()
     const deleteMutation = useDeleteUGC()
+    const [editing, setEditing] = useState(false)
+    const [editUrl, setEditUrl] = useState(item.url)
+    const [editTitle, setEditTitle] = useState(item.title)
+    const [editType, setEditType] = useState<'instagram' | 'youtube'>(item.type)
+
+    const cancelEdit = () => {
+        setEditUrl(item.url)
+        setEditTitle(item.title)
+        setEditType(item.type)
+        setEditing(false)
+    }
+
+    const saveEdit = async () => {
+        if (!editUrl.trim()) {
+            toast.error('A reel URL is required')
+            return
+        }
+        try {
+            await updateMutation.mutateAsync({
+                id: item._id,
+                data: { url: editUrl.trim(), title: editTitle.trim(), type: editType },
+            })
+            setEditing(false)
+            toast.success('Reel updated')
+        } catch {
+            toast.error('Failed to update reel')
+        }
+    }
 
     const toggleActive = async () => {
         try {
@@ -85,6 +125,53 @@ function UGCCard({ item }: { item: UGCItem }) {
 
             {/* Info */}
             <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                        Position {index + 1}
+                    </span>
+                    <div className="flex items-center gap-1">
+                        <button
+                            type="button"
+                            onClick={() => onMove(index, -1)}
+                            disabled={index === 0 || moving}
+                            aria-label={`Move ${item.title || item.type} earlier`}
+                            className="w-8 h-8 inline-flex items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            {moving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronUp className="w-4 h-4" />}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onMove(index, 1)}
+                            disabled={index === total - 1 || moving}
+                            aria-label={`Move ${item.title || item.type} later`}
+                            className="w-8 h-8 inline-flex items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            {moving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                    </div>
+                </div>
+                {editing ? (
+                    <div className="space-y-2 mb-3">
+                        <Input value={editUrl} onChange={event => setEditUrl(event.target.value)} placeholder="Reel URL" />
+                        <Input value={editTitle} onChange={event => setEditTitle(event.target.value)} placeholder="Label (optional)" />
+                        <select
+                            value={editType}
+                            onChange={event => setEditType(event.target.value as 'instagram' | 'youtube')}
+                            className="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm"
+                        >
+                            <option value="instagram">Instagram</option>
+                            <option value="youtube">YouTube</option>
+                        </select>
+                        <div className="flex gap-2">
+                            <Button size="sm" onClick={saveEdit} disabled={updateMutation.isPending} className="gap-1.5">
+                                <Save className="w-3.5 h-3.5" /> Save changes
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={cancelEdit} className="gap-1.5">
+                                <X className="w-3.5 h-3.5" /> Cancel
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
                 <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-1">
@@ -109,6 +196,7 @@ function UGCCard({ item }: { item: UGCItem }) {
                         </a>
                     </div>
                 </div>
+                )}
 
                 <div className="flex items-center gap-2 mt-3">
                     <button
@@ -122,6 +210,13 @@ function UGCCard({ item }: { item: UGCItem }) {
                     >
                         {item.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                         {item.isActive ? 'Visible' : 'Hidden'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setEditing(true)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
+                    >
+                        <Pencil className="w-3 h-3" /> Edit
                     </button>
                     <button
                         onClick={handleDelete}
@@ -138,12 +233,35 @@ function UGCCard({ item }: { item: UGCItem }) {
 export default function UGCPage() {
     const { data, isLoading, refetch } = useUGC()
     const createMutation = useCreateUGC()
+    const reorderMutation = useReorderUGC()
 
     const [url, setUrl] = useState('')
     const [title, setTitle] = useState('')
     const [adding, setAdding] = useState(false)
 
     const items: UGCItem[] = data?.items ?? []
+    const [orderedItems, setOrderedItems] = useState<UGCItem[]>([])
+
+    useEffect(() => {
+        setOrderedItems(items)
+    }, [items])
+
+    const moveItem = async (index: number, direction: -1 | 1) => {
+        const nextIndex = index + direction
+        if (nextIndex < 0 || nextIndex >= orderedItems.length || reorderMutation.isPending) return
+
+        const previous = orderedItems
+        const next = [...orderedItems]
+        ;[next[index], next[nextIndex]] = [next[nextIndex], next[index]]
+        setOrderedItems(next)
+        try {
+            await reorderMutation.mutateAsync(next.map(item => item._id))
+            toast.success('Display order updated')
+        } catch {
+            setOrderedItems(previous)
+            toast.error('Could not update the order. Please refresh and try again.')
+        }
+    }
 
     const handleAdd = async () => {
         if (!url.trim()) return
@@ -161,8 +279,8 @@ export default function UGCPage() {
         }
     }
 
-    const instagram = items.filter(i => i.type === 'instagram')
-    const youtube = items.filter(i => i.type === 'youtube')
+    const instagram = orderedItems.filter(i => i.type === 'instagram')
+    const youtube = orderedItems.filter(i => i.type === 'youtube')
 
     return (
         <div className="space-y-6">
@@ -174,9 +292,11 @@ export default function UGCPage() {
                         Instagram Reels & YouTube Shorts shown on the homepage
                     </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
-                    <RefreshCw className="h-4 w-4" /> Refresh
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
+                        <RefreshCw className="h-4 w-4" /> Refresh
+                    </Button>
+                </div>
             </div>
 
             {/* Add form */}
@@ -209,7 +329,7 @@ export default function UGCPage() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
                 {[
-                    { label: 'Total Embeds', value: items.length },
+                    { label: 'Total Embeds', value: orderedItems.length },
                     { label: 'Instagram', value: instagram.length, icon: <Instagram className="w-4 h-4 text-pink-500" /> },
                     { label: 'YouTube', value: youtube.length, icon: <Youtube className="w-4 h-4 text-red-500" /> },
                 ].map(s => (
@@ -230,7 +350,7 @@ export default function UGCPage() {
                         <div key={i} className="bg-gray-100 rounded-2xl h-64 animate-pulse" />
                     ))}
                 </div>
-            ) : items.length === 0 ? (
+            ) : orderedItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                     <div className="w-16 h-16 rounded-full bg-pink-50 flex items-center justify-center mb-4">
                         <Instagram className="w-8 h-8 text-pink-400" />
@@ -240,7 +360,16 @@ export default function UGCPage() {
                 </div>
             ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {items.map(item => <UGCCard key={item._id} item={item} />)}
+                    {orderedItems.map((item, index) => (
+                        <UGCCard
+                            key={item._id}
+                            item={item}
+                            index={index}
+                            total={orderedItems.length}
+                            onMove={moveItem}
+                            moving={reorderMutation.isPending}
+                        />
+                    ))}
                 </div>
             )}
         </div>

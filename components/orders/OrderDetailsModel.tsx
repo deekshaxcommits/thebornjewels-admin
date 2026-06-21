@@ -3,6 +3,28 @@ import Link from "next/link";
 
 import React from 'react'
 
+const getItemDisplay = (item: IOrder["items"][number]) => {
+    if (item.itemType === "hamper") {
+        const unitPrice = item.quantity ? item.finalPrice / item.quantity : item.finalPrice
+        return {
+            title: item.snapshot?.title || item.hamper?.title || "Gift Hamper",
+            href: null,
+            unitPrice: unitPrice || item.hamper?.pricing?.total || 0,
+            total: item.finalPrice || (item.hamper?.pricing?.total || 0) * item.quantity,
+            badge: "Gift Hamper",
+        }
+    }
+
+    const unitPrice = item.quantity ? item.finalPrice / item.quantity : item.finalPrice
+    return {
+        title: item.snapshot?.title || item.product?.title || "Deleted Product",
+        href: item.product?._id ? `https://thebornjewels.com/products/${item.product._id}` : null,
+        unitPrice: unitPrice || item.product?.price || 0,
+        total: item.finalPrice || (item.product?.price || 0) * item.quantity,
+        badge: "Product",
+    }
+}
+
 const OrderDetailsModel = ({ order, onClose }: { order: IOrder; onClose: () => void }) => {
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -85,15 +107,19 @@ const OrderDetailsModel = ({ order, onClose }: { order: IOrder; onClose: () => v
                         {order.items.map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between">
                                 <div>
-                                    <Link href={`https://thebornjewels.com/products/${item.product._id}`} className="font-medium text-gray-900 hover:underline">
-                                        {item.product.title}
-                                    </Link>
+                                    {getItemDisplay(item).href ? (
+                                        <Link href={getItemDisplay(item).href!} className="font-medium text-gray-900 hover:underline">
+                                            {getItemDisplay(item).title}
+                                        </Link>
+                                    ) : (
+                                        <p className="font-medium text-gray-900">{getItemDisplay(item).title}</p>
+                                    )}
                                     <p className="text-sm text-gray-500">
-                                        Qty: {item.quantity} × ₹{item.product.price.toLocaleString("en-IN")}
+                                        {getItemDisplay(item).badge} · Qty: {item.quantity} × ₹{getItemDisplay(item).unitPrice.toLocaleString("en-IN")}
                                     </p>
                                 </div>
                                 <p className="font-semibold text-gray-800">
-                                    ₹{(item.quantity * item.product.price).toLocaleString("en-IN")}
+                                    ₹{getItemDisplay(item).total.toLocaleString("en-IN")}
                                 </p>
                             </div>
                         ))}

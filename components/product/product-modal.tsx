@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { X, Upload, Plus } from "lucide-react"
+import { X, Upload, Plus, ChevronUp, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -79,6 +79,16 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
     // Reels inspo
     const [inspirationReels, setInspirationReels] = useState<string[]>([]);
     const [newReel, setNewReel] = useState("");
+
+    const moveReel = (index: number, direction: -1 | 1) => {
+        const nextIndex = index + direction;
+        if (nextIndex < 0 || nextIndex >= inspirationReels.length) return;
+        setInspirationReels(current => {
+            const next = [...current];
+            [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+            return next;
+        });
+    };
 
     // live calculations
     useEffect(() => {
@@ -851,9 +861,23 @@ export function ProductModal({ isOpen, onClose, onSuccess, productId }: ProductM
                                         </div>
                                         <div className="flex flex-col gap-1.5 mt-2">
                                             {inspirationReels.map((reel, i) => (
-                                                <div key={i} className="bg-pink-50 border border-pink-200 px-3 py-1.5 rounded-lg flex items-center justify-between gap-2 text-xs text-pink-800">
-                                                    <span className="truncate">{reel}</span>
-                                                    <X size={12} className="shrink-0 cursor-pointer hover:text-red-600" onClick={() => setInspirationReels(inspirationReels.filter((_, idx) => idx !== i))} />
+                                                <div key={`${reel}-${i}`} className="bg-pink-50 border border-pink-200 px-2 py-1.5 rounded-lg flex items-center gap-2 text-xs text-pink-800">
+                                                    <span className="w-5 shrink-0 text-center font-semibold text-pink-500">{i + 1}</span>
+                                                    <Input
+                                                        value={reel}
+                                                        onChange={event => setInspirationReels(current => current.map((value, index) => index === i ? event.target.value : value))}
+                                                        aria-label={`Reel ${i + 1} URL`}
+                                                        className="h-8 flex-1 border-pink-200 bg-white text-xs text-pink-800"
+                                                    />
+                                                    <button type="button" onClick={() => moveReel(i, -1)} disabled={i === 0} aria-label="Move reel earlier" className="w-7 h-7 inline-flex items-center justify-center rounded border border-pink-200 hover:bg-pink-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                                                        <ChevronUp size={14} />
+                                                    </button>
+                                                    <button type="button" onClick={() => moveReel(i, 1)} disabled={i === inspirationReels.length - 1} aria-label="Move reel later" className="w-7 h-7 inline-flex items-center justify-center rounded border border-pink-200 hover:bg-pink-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                                                        <ChevronDown size={14} />
+                                                    </button>
+                                                    <button type="button" onClick={() => setInspirationReels(inspirationReels.filter((_, idx) => idx !== i))} aria-label="Remove reel" className="w-7 h-7 inline-flex items-center justify-center rounded text-pink-700 hover:bg-red-50 hover:text-red-600">
+                                                        <X size={14} />
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>

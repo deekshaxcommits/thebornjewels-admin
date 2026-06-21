@@ -11,6 +11,13 @@ import OrderDetailsModal from "@/components/orders/OrderDetailsModel"
 import { OrderModal } from "@/components/orders/order-modal"
 import DateFilter, { DateFilterState, isInDateRange } from "@/components/ui/DateFilter"
 
+const getOrderItemLabel = (item: IOrder["items"][number]) => {
+    if (item.itemType === "hamper") {
+        return item.snapshot?.title || item.hamper?.title || "Gift Hamper"
+    }
+    return item.snapshot?.title || item.product?.title || "Deleted Product"
+}
+
 export default function OrdersPage() {
     const [orders, setOrders] = useState<IOrder[]>([])
     const [filteredOrders, setFilteredOrders] = useState<IOrder[]>([])
@@ -232,7 +239,7 @@ export default function OrdersPage() {
                                     <td className="p-3 text-gray-700">
                                         {order.items.map((i, idx) => (
                                             <div key={idx} className="truncate">
-                                                {i.product?.title || "Deleted Product"} × {i.quantity}
+                                                {getOrderItemLabel(i)} × {i.quantity}
                                             </div>
                                         ))}
                                     </td>

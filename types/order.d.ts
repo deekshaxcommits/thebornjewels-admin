@@ -3,7 +3,18 @@
 import { IProduct } from "./product";
 
 export interface IOrderItem {
-    product: IProduct;
+    itemType?: "product" | "hamper";
+    product?: IProduct;
+    hamper?: {
+        _id: string;
+        title?: string;
+        pricing?: { total?: number };
+        products?: Array<{ snapshot?: { title?: string; image?: string; price?: number } }>;
+    };
+    snapshot?: {
+        title?: string;
+        image?: string;
+    };
     name: string;
     image: string;
     originalPrice: number;

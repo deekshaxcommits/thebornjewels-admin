@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAllUGC, createUGC, updateUGC, deleteUGC, UGCItem } from "@/lib/api/ugc";
+import { getAllUGC, createUGC, updateUGC, deleteUGC, reorderUGC, UGCItem } from "@/lib/api/ugc";
 
 export const useUGC = () =>
     useQuery({ queryKey: ["ugc"], queryFn: getAllUGC });
@@ -25,5 +25,13 @@ export const useDeleteUGC = () => {
     return useMutation({
         mutationFn: deleteUGC,
         onSuccess: () => qc.invalidateQueries({ queryKey: ["ugc"] }),
+    });
+};
+
+export const useReorderUGC = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: reorderUGC,
+        onSuccess: (data) => qc.setQueryData(["ugc"], data),
     });
 };

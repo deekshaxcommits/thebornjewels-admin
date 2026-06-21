@@ -25,6 +25,11 @@ export const updateUGC = async (id: string, data: Partial<UGCItem>): Promise<{ i
     return res.data;
 };
 
+export const reorderUGC = async (itemIds: string[]): Promise<{ items: UGCItem[] }> => {
+    const res = await api.patch("/ugc/reorder", { itemIds });
+    return res.data;
+};
+
 export const deleteUGC = async (id: string): Promise<void> => {
     await api.delete(`/ugc/${id}`);
 };

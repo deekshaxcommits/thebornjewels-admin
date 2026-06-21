@@ -93,6 +93,11 @@ export default function Layout({ children }: LayoutProps) {
             icon: <IconLayout2 className="h-5 w-5" />,
         },
         {
+            label: "Ad Offers",
+            href: "/offers",
+            icon: <IconDiscountCheck className="h-5 w-5" />,
+        },
+        {
             label: "Settings",
             href: "/settings",
             icon: <IconSettings className="h-5 w-5" />,
